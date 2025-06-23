@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDS Operations Log - Carga y Análisis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f7f7f7; 
+            --card-bg-color: #ffffff;
+            --text-color: #37352f; 
+            --primary-color: #4A90E2; 
+            --secondary-color: #50E3C2; 
+            --border-color: #e0e0e0;
+            --input-bg-color: #fdfdfd;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --border-radius: 8px;
+        }
+        body {
+            font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; box-sizing: border-box;
+        }
+        .container, .chart-container-wrapper, .summary-cards-container-wrapper {
+            background-color: var(--card-bg-color); padding: 30px 40px; border-radius: var(--border-radius);
+            box-shadow: var(--shadow); width: 100%; max-width: 700px; margin-bottom: 30px;
+        }
+        .chart-container-wrapper, .summary-cards-container-wrapper { max-width: 800px; }
+        h1, h2 { color: var(--primary-color); text-align: center; margin-bottom: 30px; font-weight: 600; }
+        h2 { font-size: 1.5em; margin-top: 0; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+        input[type="datetime-local"], input[type="date"], input[type="number"], input[type="text"], select { 
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;
+            box-sizing: border-box; font-size: 1rem; background-color: var(--input-bg-color);
+            color: var(--text-color); transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+        fieldset {
+            border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px;
+            margin-bottom: 25px; background-color: #fcfcfc;
+        }
+        legend { font-weight: 600; color: var(--primary-color); padding: 0 10px; font-size: 1.1em; }
+        .button-container { text-align: center; margin-top: 30px; }
+        button[type="submit"], .filter-button {
+            background-color: var(--primary-color); color: white; padding: 14px 25px; border: none;
+            border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.1s ease; margin-top: 10px; 
+        }
+        .filter-button { padding: 12px 20px; font-size: 0.9rem; background-color: var(--secondary-color); }
+        button[type="submit"]:hover, .filter-button:hover { background-color: #3a7cc2; }
+        .filter-button:hover { background-color: #40c0a8; }
+        button[type="submit"]:active, .filter-button:active { transform: translateY(1px); }
+        button[type="submit"]:disabled { background-color: #ccc; cursor: not-allowed; }
+        .status-message {
+            margin-top: 20px; padding: 10px; border-radius: 6px; text-align: center; font-weight: 500;
+        }
+        .status-message.success { background-color: #e6ffed; color: #2f6f4d; border: 1px solid #c3e6cb; }
+        .status-message.error { background-color: #ffebee; color: #c62828; border: 1px solid #f5c6cb; }
+        .filters-container {
+            display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; 
+        }
+        .filters-container .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+        #loadingChart, #loadingCards {
+            text-align: center; padding: 20px; color: var(--primary-color); font-size: 1.1em;
+        }
+        .summary-cards-container {
+            display: flex; gap: 20px; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; 
+        }
+        .summary-card {
+            background-color: var(--card-bg-color); border-radius: var(--border-radius); padding: 20px;
+            text-align: center; flex-basis: 200px; flex-grow: 1; min-width: 180px;
+        }
+        .summary-card h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: var(--text-color); font-weight: 500; }
+        .summary-card p { font-size: 1.8em; font-weight: 600; color: var(--primary-color); margin: 0; }
+        footer {
+            text-align: center; padding: 20px; color: #777; font-size: 0.9em; width: 100%; margin-top: auto; 
+        }
+        footer .linkedin-logo {
+            width: 20px; height: 20px; vertical-align: middle; margin-left: 5px; opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        footer a:hover .linkedin-logo { opacity: 1; }
+        @media (max-width: 768px) { 
+            .summary-cards-container { flex-direction: column; align-items: center; }
+            .summary-card { flex-basis: 100%; max-width: 300px; }
+        }
+        @media (max-width: 600px) {
+            .container, .chart-container-wrapper, .summary-cards-container-wrapper { padding: 20px; }
+            h1 { font-size: 1.5em; }
+            .filters-container { flex-direction: column; gap: 10px; }
+            .filters-container .form-group { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Carga de Datos Diarios del Hotel</h1>
+        <form id="hotelDataForm">
+            <!-- COPIA Y PEGA TU FORMULARIO COMPLETO AQUÍ -->
+             <div class="form-group"> <label for="registroTimestamp">Fecha y Hora del Registro:</label> <input type="text" id="registroTimestamp" name="registroTimestamp" readonly> </div>
+            <div class="form-group"> <label for="fechaReporte">Fecha del Reporte:</label> <input type="date" id="fechaReporte" name="fechaReporte" required> </div>
+            <div class="form-group"> <label for="ocupacionHotel"># Cantidad de Huéspedes:</label> <input type="number" id="ocupacionHotel" name="ocupacionHotel" min="0" step="1" placeholder="Ej: 180" required> </div>
+             <fieldset> <legend>🍳 Desayuno</legend> <div class="form-group"> <label for="cantidadDesayunos"># Cantidad de Desayunos:</label> <input type="number" id="cantidadDesayunos" name="cantidadDesayunos" min="0" placeholder="Ej: 120" required> </div> <div class="form-group"> <label for="mozosDesayuno">Mozos Desayuno:</label> <input type="number" id="mozosDesayuno" name="mozosDesayuno" min="0" placeholder="Ej: 3" required> </div> <div class="form-group"> <label for="bacherosDesayuno">Bacheros Desayuno:</label> <input type="number" id="bacherosDesayuno" name="bacherosDesayuno" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosDesayuno">Cocineros Desayuno:</label> <input type="number" id="cocinerosDesayuno" name="cocinerosDesayuno" min="0" placeholder="Ej: 2" required> </div> </fieldset>
+            <fieldset> <legend>🍽️ Almuerzo</legend> <div class="form-group"> <label for="cubiertosAlmuerzo"># Cubiertos Almuerzo:</label> <input type="number" id="cubiertosAlmuerzo" name="cubiertosAlmuerzo" min="0" placeholder="Ej: 80" required> </div> <div class="form-group"> <label for="mozosAlmuerzo">Mozos Almuerzo:</label> <input type="number" id="mozosAlmuerzo" name="mozosAlmuerzo" min="0" placeholder="Ej: 2" required> </div> <div class="form-group"> <label for="bacherosAlmuerzo">Bacheros Almuerzo:</label> <input type="number" id="bacherosAlmuerzo" name="bacherosAlmuerzo" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosAlmuerzo">Cocineros Almuerzo:</label> <input type="number" id="cocinerosAlmuerzo" name="cocinerosAlmuerzo" min="0" placeholder="Ej: 2" required> </div> </fieldset>
+            <fieldset> <legend>🌙 Cena</legend> <div class="form-group"> <label for="cubiertosCena"># Cubiertos Cena:</label> <input type="number" id="cubiertosCena" name="cubiertosCena" min="0" placeholder="Ej: 150" required> </div> <div class="form-group"> <label for="mozosCena">Mozos Cena:</label> <input type="number" id="mozosCena" name="mozosCena" min="0" placeholder="Ej: 4" required> </div> <div class="form-group"> <label for="bacherosCena">Bacheros Cena:</label> <input type="number" id="bacherosCena" name="bacherosCena" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosCena">Cocineros Cena:</label> <input type="number" id="cocinerosCena" name="cocinerosCena" min="0" placeholder="Ej: 3" required> </div> </fieldset>
+            <div class="button-container"> <button type="submit" id="submitButton">💾 Guardar Datos</button> </div>
+        </form>
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+    </div>
+
+    <div class="chart-container-wrapper">
+        <h2>📊 Cantidad de Huéspedes vs. Tiempo</h2>
+        <div class="filters-container">
+            <div class="form-group"> <label for="filterYear">Año:</label> <select id="filterYear"><option value="">Todos</option></select> </div>
+            <div class="form-group"> <label for="filterMonth">Mes:</label> <select id="filterMonth"><option value="">Todos</option></select> </div>
+            <div class="form-group"> <label for="filterDay">Día:</label> <select id="filterDay"><option value="">Todos</option></select> </div>
+            <button type="button" class="filter-button" id="applyFilterButton">Filtrar</button>
+            <button type="button" class="filter-button" id="resetFilterButton" style="background-color: #777;">Resetear</button>
+        </div>
+        <div id="loadingChart" style="display: none;">Cargando gráfico...</div>
+        <canvas id="ocupacionHotelChart"></canvas>
+    </div>
+
+    <div class="summary-cards-container-wrapper">
+        <h2>Resumen Costos Laborales (%)</h2>
+        <div id="loadingCards" style="display: none;">Calculando promedios...</div>
+        <div class="summary-cards-container" id="summaryCardsContent">
+            <div class="summary-card" id="cardCLDesayuno"> <h3>CL Desayuno</h3> <p><span id="avgCLDesayunoValue">-</span>%</p> </div>
+            <div class="summary-card" id="cardCLAlmuerzo"> <h3>CL Almuerzo</h3> <p><span id="avgCLAlmuerzoValue">-</span>%</p> </div>
+            <div class="summary-card" id="cardCLCena"> <h3>CL Cena</h3> <p><span id="avgCLCenaValue">-</span>%</p> </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 MDS Operations Log. Maximizando eficiencia.
+        <a href="https://www.linkedin.com/in/martin-schupp-07332511/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de Martin Schupp">
+            <svg class="linkedin-logo" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"> <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/> </svg>
+        </a>
+    </footer>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI2dak2JWQeDxWnhJZbwK04OR8g7aibHBAB_WL2XqZdxQ-olPinJbA8CCt_Qh_q3cxDA/exec'; // <-- ¡¡VERIFICA Y ACTUALIZA ESTA URL!!
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const formattedDateTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('registroTimestamp').value = formattedDateTime;
+            const today = now.toISOString().split('T')[0];
+            document.getElementById('fechaReporte').value = today;
+            fetchChartData(); 
+            setupFilterListeners();
+        });
+        const form = document.getElementById('hotelDataForm');
+        const submitButton = document.getElementById('submitButton');
+        const statusMessage = document.getElementById('statusMessage');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitButton.disabled = true; submitButton.textContent = 'Guardando...';
+            statusMessage.style.display = 'none'; statusMessage.className = 'status-message'; 
+            const formData = new FormData(form); const data = {};
+            data['RegistroTimestamp'] = new Date().toISOString(); 
+            for (let [key, value] of formData.entries()) { data[key] = value; }
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', cache: 'no-cache', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(() => { 
+                statusMessage.textContent = '¡Datos guardados exitosamente!'; statusMessage.classList.add('success'); statusMessage.style.display = 'block';
+                form.reset(); 
+                const now = new Date(); 
+                const day = String(now.getDate()).padStart(2, '0'); const month = String(now.getMonth() + 1).padStart(2, '0'); const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); const seconds = String(now.getSeconds()).padStart(2, '0');
+                const formattedDateTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                document.getElementById('registroTimestamp').value = formattedDateTime;
+                const today = now.toISOString().split('T')[0]; document.getElementById('fechaReporte').value = today;
+                fetchChartData(); 
+            })
+            .catch(error => { console.error('Error al guardar:', error); statusMessage.textContent = 'Error al guardar los datos. Detalles: ' + error.message; statusMessage.classList.add('error'); statusMessage.style.display = 'block'; })
+            .finally(() => { submitButton.disabled = false; submitButton.textContent = '💾 Guardar Datos'; });
+        });
+        const chartCanvas = document.getElementById('ocupacionHotelChart');
+        const loadingChartDiv = document.getElementById('loadingChart');
+        const loadingCardsDiv = document.getElementById('loadingCards');
+        const summaryCardsContentDiv = document.getElementById('summaryCardsContent');
+        let hotelChart = null; 
+        let allChartData = []; 
+        const filterYearSelect = document.getElementById('filterYear'); const filterMonthSelect = document.getElementById('filterMonth'); const filterDaySelect = document.getElementById('filterDay');
+        const applyFilterButton = document.getElementById('applyFilterButton'); const resetFilterButton = document.getElementById('resetFilterButton');
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        function populateFilterOptions(data) { const years = new Set(); data.forEach(item => { if (item.x) years.add(new Date(item.x).getFullYear()); }); filterYearSelect.innerHTML = '<option value="">Todos</option>'; Array.from(years).sort((a,b) => b - a).forEach(year => { const option = document.createElement('option'); option.value = year; option.textContent = year; filterYearSelect.appendChild(option); }); updateMonthOptions(); }
+        function updateMonthOptions() { const selectedYear = filterYearSelect.value; const monthsInYear = new Set(); filterMonthSelect.innerHTML = '<option value="">Todos</option>'; allChartData.forEach(item => { if (item.x) { const date = new Date(item.x); if (!selectedYear || date.getFullYear() == selectedYear) { monthsInYear.add(date.getMonth()); } } }); Array.from(monthsInYear).sort((a,b) => a - b).forEach(monthIndex => { const option = document.createElement('option'); option.value = monthIndex + 1; option.textContent = monthNames[monthIndex]; filterMonthSelect.appendChild(option); }); updateDayOptions(); }
+        function updateDayOptions() { const selectedYear = filterYearSelect.value; const selectedMonth = filterMonthSelect.value; const daysInSelection = new Set(); filterDaySelect.innerHTML = '<option value="">Todos</option>'; allChartData.forEach(item => { if (item.x) { const date = new Date(item.x); let yearMatch = !selectedYear || date.getFullYear() == selectedYear; let monthMatch = !selectedMonth || (date.getMonth() + 1) == selectedMonth; if (yearMatch && monthMatch) daysInSelection.add(date.getDate()); } }); Array.from(daysInSelection).sort((a,b) => a - b).forEach(day => { const option = document.createElement('option'); option.value = day; option.textContent = day; filterDaySelect.appendChild(option); }); }
+        function setupFilterListeners() { filterYearSelect.addEventListener('change', updateMonthOptions); filterMonthSelect.addEventListener('change', updateDayOptions); applyFilterButton.addEventListener('click', applyFiltersAndRender); resetFilterButton.addEventListener('click', resetFiltersAndRender); }
+        function applyFiltersAndRender() { const selectedYear = filterYearSelect.value; const selectedMonth = filterMonthSelect.value; const selectedDay = filterDaySelect.value; const filteredData = allChartData.filter(item => { if (!item.x) return false; const date = new Date(item.x); const yearMatch = !selectedYear || date.getFullYear() == selectedYear; const monthMatch = !selectedMonth || (date.getMonth() + 1) == selectedMonth; const dayMatch = !selectedDay || date.getDate() == selectedDay; return yearMatch && monthMatch && dayMatch; }); renderChart(filteredData); updateSummaryCards(filteredData); }
+        function resetFiltersAndRender() { filterYearSelect.value = ""; updateMonthOptions(); filterMonthSelect.value = ""; updateDayOptions(); filterDaySelect.value = ""; renderChart(allChartData); updateSummaryCards(allChartData); }
+        async function fetchChartData() { 
+            loadingChartDiv.style.display = 'block'; loadingChartDiv.textContent = 'Cargando gráfico...'; 
+            loadingCardsDiv.style.display = 'block'; loadingCardsDiv.textContent = 'Cargando resúmenes...';
+            summaryCardsContentDiv.style.display = 'none';
+            chartCanvas.style.display = 'none'; 
+            if (hotelChart) hotelChart.destroy();
+            try {
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getChartData`);
+                if (!response.ok) { throw new Error(`Error de red o servidor: ${response.status} ${response.statusText}`); }
+                const rawData = await response.json(); 
+                if (rawData && rawData.status === "error") { throw new Error(`Error desde Apps Script: ${rawData.message}`); }
+                allChartData = rawData.map(item => ({ x: item.fechaReporte, y: parseFloat(item.ocupacionHotel), clP: item.clP, clQ: item.clQ, clR: item.clR, clS: item.clS, clT: item.clT, clU: item.clU, clV: item.clV, clW: item.clW, clX: item.clX })).filter(item => item.x && !isNaN(item.y)).sort((a, b) => new Date(a.x) - new Date(b.x)); 
+                populateFilterOptions(allChartData); renderChart(allChartData); updateSummaryCards(allChartData);
+            } catch (error) { 
+                console.error("Error cargando datos para UI:", error);
+                const errorMessage = `Error al cargar datos: ${error.message}. Asegúrate que la URL del script y los nombres de columna sean correctos.`;
+                loadingChartDiv.textContent = errorMessage; loadingCardsDiv.textContent = ""; 
+                loadingChartDiv.style.display = 'block'; loadingCardsDiv.style.display = 'none';
+            } finally {
+                if (loadingChartDiv.textContent.startsWith("Cargando")) { loadingChartDiv.style.display = 'none'; }
+                if (loadingCardsDiv.textContent.startsWith("Cargando")) { loadingCardsDiv.style.display = 'none'; }
+                if (allChartData.length > 0) { if (loadingChartDiv.style.display === 'none') chartCanvas.style.display = 'block'; if (loadingCardsDiv.style.display === 'none') summaryCardsContentDiv.style.display = 'flex'; }
+            }
+        }
+
+        // --- FUNCIÓN updateSummaryCards MODIFICADA ---
+        function updateSummaryCards(dataForPeriod) {
+            loadingCardsDiv.style.display = 'none';
+            summaryCardsContentDiv.style.display = 'flex';
+
+            let totalSumCLDesayuno = 0;
+            let totalCountCLDesayuno = 0;
+            let totalSumCLAlmuerzo = 0;
+            let totalCountCLAlmuerzo = 0;
+            let totalSumCLCena = 0;
+            let totalCountCLCena = 0;
+
+            dataForPeriod.forEach(item => {
+                // Acumular valores para Desayuno (P, Q, R)
+                if (typeof item.clP === 'number' && !isNaN(item.clP)) { totalSumCLDesayuno += item.clP; totalCountCLDesayuno++; }
+                if (typeof item.clQ === 'number' && !isNaN(item.clQ)) { totalSumCLDesayuno += item.clQ; totalCountCLDesayuno++; }
+                if (typeof item.clR === 'number' && !isNaN(item.clR)) { totalSumCLDesayuno += item.clR; totalCountCLDesayuno++; }
+
+                // Acumular valores para Almuerzo (S, T, U)
+                if (typeof item.clS === 'number' && !isNaN(item.clS)) { totalSumCLAlmuerzo += item.clS; totalCountCLAlmuerzo++; }
+                if (typeof item.clT === 'number' && !isNaN(item.clT)) { totalSumCLAlmuerzo += item.clT; totalCountCLAlmuerzo++; }
+                if (typeof item.clU === 'number' && !isNaN(item.clU)) { totalSumCLAlmuerzo += item.clU; totalCountCLAlmuerzo++; }
+
+                // Acumular valores para Cena (V, W, X)
+                if (typeof item.clV === 'number' && !isNaN(item.clV)) { totalSumCLCena += item.clV; totalCountCLCena++; }
+                if (typeof item.clW === 'number' && !isNaN(item.clW)) { totalSumCLCena += item.clW; totalCountCLCena++; }
+                if (typeof item.clX === 'number' && !isNaN(item.clX)) { totalSumCLCena += item.clX; totalCountCLCena++; }
+            });
+
+            // Calcular promedio y multiplicar por 100 si los datos originales son decimales (ej: 0.1 para 10%)
+            const finalAvgDesayuno = (totalCountCLDesayuno > 0)
+                ? ((totalSumCLDesayuno / totalCountCLDesayuno) * 100).toFixed(1) 
+                : "N/A";
+            const finalAvgAlmuerzo = (totalCountCLAlmuerzo > 0)
+                ? ((totalSumCLAlmuerzo / totalCountCLAlmuerzo) * 100).toFixed(1)
+                : "N/A";
+            const finalAvgCena = (totalCountCLCena > 0)
+                ? ((totalSumCLCena / totalCountCLCena) * 100).toFixed(1)
+                : "N/A";
+
+            document.getElementById('avgCLDesayunoValue').textContent = finalAvgDesayuno;
+            document.getElementById('avgCLAlmuerzoValue').textContent = finalAvgAlmuerzo;
+            document.getElementById('avgCLCenaValue').textContent = finalAvgCena;
+
+            if (dataForPeriod.length === 0) {
+                 loadingCardsDiv.textContent = "No hay datos para el período seleccionado.";
+                 loadingCardsDiv.style.display = 'block';
+                 summaryCardsContentDiv.style.display = 'none';
+            } else if (totalCountCLDesayuno === 0 && totalCountCLAlmuerzo === 0 && totalCountCLCena === 0) {
+                document.getElementById('avgCLDesayunoValue').textContent = "N/A";
+                document.getElementById('avgCLAlmuerzoValue').textContent = "N/A";
+                document.getElementById('avgCLCenaValue').textContent = "N/A";
+            }
+        }
+        // --- FIN FUNCIÓN updateSummaryCards MODIFICADA ---
+
+        function renderChart(dataToRender) {
+            if (hotelChart) hotelChart.destroy();
+             if (!chartCanvas) { loadingChartDiv.textContent = "Error: Elemento canvas del gráfico no encontrado."; loadingChartDiv.style.display = 'block'; return; }
+            if (dataToRender.length === 0) {
+                if (!loadingChartDiv.textContent.startsWith("Error")) { loadingChartDiv.textContent = "No hay datos de ocupación para mostrar con los filtros seleccionados."; }
+                loadingChartDiv.style.display = 'block'; chartCanvas.style.display = 'none'; return;
+            } else { loadingChartDiv.style.display = 'none'; chartCanvas.style.display = 'block'; }
+            const ctx = chartCanvas.getContext('2d');
+            hotelChart = new Chart(ctx, { type: 'line', data: { 
+                 datasets: [{ label: 'Cantidad de Huéspedes', data: dataToRender, borderColor: 'var(--primary-color)', backgroundColor: 'rgba(74, 144, 226, 0.1)', tension: 0.2, fill: true, pointBackgroundColor: 'var(--primary-color)', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'var(--primary-color)', pointRadius: 4, pointHoverRadius: 6 }]
+            }, options: { 
+                responsive: true, maintainAspectRatio: true, 
+                scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'dd MMM yyyy', displayFormats: { day: 'dd MMM', month: 'MMM yyyy', year: 'yyyy' } }, title: { display: true, text: 'Fecha del Reporte', color: 'var(--text-color)' }, ticks: { color: 'var(--text-color)'}, grid: { display: false } }, y: { beginAtZero: true, title: { display: true, text: 'Cantidad de Huéspedes', color: 'var(--text-color)' }, ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)', drawBorder: false } } },
+                plugins: { legend: { display: true, position: 'top', labels: { color: 'var(--text-color)', font: { family: 'var(--font-family)'}} }, tooltip: { backgroundColor: 'var(--text-color)', titleColor: 'var(--card-bg-color)', bodyColor: 'var(--card-bg-color)', titleFont: { family: 'var(--font-family)', weight: 'bold' }, bodyFont: { family: 'var(--font-family)' }, padding: 10, cornerRadius: 'var(--border-radius)'/2, callbacks: { label: function(context) { return `${context.dataset.label}: ${context.parsed.y}`; } } } },
+                interaction: { mode: 'index', intersect: false }, hover: { mode: 'nearest', intersect: true }
+            } });
+        }
+    </script>
+</body>
+</html>
