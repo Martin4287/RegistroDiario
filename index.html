@@ -1,43 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro Diario</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px;
-    }
-    .excel-btn {
-      display: inline-block;
-      padding: 12px 24px;
-      margin-bottom: 30px;
-      font-size: 16px;
-      color: white;
-      background-color: #4CAF50;
-      border: none;
-      border-radius: 5px;
-      text-decoration: none;
-      transition: background-color 0.3s;
-    }
-    .excel-btn:hover {
-      background-color: #45a049;
-    }
-  </style>
-</head>
-<body>
-  <a class="excel-btn" href="https://docs.google.com/spreadsheets/d/1sWpt3NMZTdQRfQFVYL96u-tzDt2VbD9mwhNj-72oR6E/edit?gid=0#gid=0" target="_blank">
-    Datos en Excel
-  </a>
-</body>
-</html>
-
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDS Operations Log - Carga y Análisis</title>
@@ -48,12 +11,15 @@
             --bg-color: #f7f7f7; 
             --card-bg-color: #ffffff;
             --text-color: #37352f; 
-            --primary-color: #4A90E2; 
-            --secondary-color: #50E3C2; 
+            --primary-color: #4A90E2; /* Un azul vibrante */
+            --secondary-color: #50E3C2; /* Un turquesa complementario */
             --border-color: #e0e0e0;
             --input-bg-color: #fdfdfd;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            /* Nueva sombra estilo Notion - más sutil y múltiple */
+            --notion-shadow-subtle: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 1px 2px;
+            --notion-shadow-hover: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 3px 6px, rgba(15, 15, 15, 0.2) 0px 9px 24px;
             --border-radius: 8px;
         }
         body {
@@ -61,11 +27,84 @@
             margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; box-sizing: border-box;
         }
-        .container, .chart-container-wrapper, .summary-cards-container-wrapper {
-            background-color: var(--card-bg-color); padding: 30px 40px; border-radius: var(--border-radius);
-            box-shadow: var(--shadow); width: 100%; max-width: 700px; margin-bottom: 30px;
+
+        /* Estilos para las pestañas */
+        .tabs-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0; /* Ajustado para que el contenido de la pestaña se una visualmente */
+            background-color: var(--card-bg-color);
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding-top: 10px;
+            position: relative;
+            z-index: 2; 
         }
-        .chart-container-wrapper, .summary-cards-container-wrapper { max-width: 800px; }
+        .tab-button {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 15px 25px; /* Un poco menos de padding para más botones */
+            cursor: pointer;
+            font-size: 1.05em; /* Ligeramente más pequeño */
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            margin: 0 5px;
+            position: relative;
+            top: 2px; 
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+        }
+        .tab-button:hover {
+            color: var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.05);
+            transform: translateY(-3px); 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08); 
+        }
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: 600;
+            background-color: var(--card-bg-color);
+            z-index: 1;
+            box-shadow: var(--shadow); 
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+            transform: translateY(-2px); 
+        }
+
+        /* Contenedores de contenido de las pestañas */
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            background-color: var(--card-bg-color);
+            padding: 30px 40px;
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+            border-top-left-radius: var(--border-radius); 
+            border-top-right-radius: var(--border-radius); 
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            position: relative; 
+            top: -2px; 
+            z-index: 1; 
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Ajuste para que la pestaña activa se fusione con el contenido */
+        .tab-button.active + .tab-content {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
         h1, h2 { color: var(--primary-color); text-align: center; margin-bottom: 30px; font-weight: 600; }
         h2 { font-size: 1.5em; margin-top: 0; }
         .form-group { margin-bottom: 25px; }
@@ -83,15 +122,50 @@
             border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px;
             margin-bottom: 25px; background-color: #fcfcfc;
         }
-        legend { font-weight: 600; color: var(--primary-color); padding: 0 10px; font-size: 1.1em; }
-        .button-container { text-align: center; margin-top: 30px; }
-        button[type="submit"], .filter-button {
+        legend { 
+            font-weight: 600; color: var(--primary-color); padding: 0 10px; font-size: 1.1em; 
+            display: flex; align-items: center; gap: 8px; 
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button[type="submit"], .filter-button { 
             background-color: var(--primary-color); color: white; padding: 14px 25px; border: none;
             border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.1s ease; margin-top: 10px; 
+            transition: background-color 0.3s ease, transform 0.1s ease; 
+            text-decoration: none;
+            display: inline-flex; 
+            align-items: center;
+            gap: 8px; 
+            justify-content: center;
         }
         .filter-button { padding: 12px 20px; font-size: 0.9rem; background-color: var(--secondary-color); }
-        button[type="submit"]:hover, .filter-button:hover { background-color: #3a7cc2; }
+        
+        .excel-button {
+            background-color: #28a745; 
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            text-decoration: none;
+            display: inline-flex; 
+            align-items: center;
+            gap: 8px; 
+            justify-content: center;
+        }
+        .excel-button:hover { background-color: #218838; } 
+        .excel-button:active { transform: translateY(1px); }
+
+        button[type="submit"]:hover { background-color: #3a7cc2; }
         .filter-button:hover { background-color: #40c0a8; }
         button[type="submit"]:active, .filter-button:active { transform: translateY(1px); }
         button[type="submit"]:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -100,22 +174,68 @@
         }
         .status-message.success { background-color: #e6ffed; color: #2f6f4d; border: 1px solid #c3e6cb; }
         .status-message.error { background-color: #ffebee; color: #c62828; border: 1px solid #f5c6cb; }
+        
+        /* Contenedor de filtros con nuevo diseño */
         .filters-container {
-            display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
         }
-        .filters-container .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+        .filters-container .form-group {
+            margin-bottom: 0; 
+        }
+
         #loadingChart, #loadingCards {
             text-align: center; padding: 20px; color: var(--primary-color); font-size: 1.1em;
         }
+
+        /* Mejoras para las tarjetas de resumen (Notion-like) */
         .summary-cards-container {
-            display: flex; gap: 20px; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; 
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding: 10px 0;
         }
         .summary-card {
-            background-color: var(--card-bg-color); border-radius: var(--border-radius); padding: 20px;
-            text-align: center; flex-basis: 200px; flex-grow: 1; min-width: 180px;
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            text-align: center;
+            flex-basis: calc(33.33% - 14px); /* Calculo para 3 columnas con gap */
+            flex-grow: 1;
+            min-width: 180px;
+            
+            box-shadow: var(--notion-shadow-subtle); /* Sombra estilo Notion sutil */
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1); 
+            border: 1px solid var(--border-color); 
         }
-        .summary-card h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: var(--text-color); font-weight: 500; }
-        .summary-card p { font-size: 1.8em; font-weight: 600; color: var(--primary-color); margin: 0; }
+        .summary-card:hover {
+            transform: translateY(-5px); 
+            box-shadow: var(--notion-shadow-hover); /* Sombra estilo Notion más pronunciada en hover */
+            border-color: var(--primary-color); 
+        }
+        .summary-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px; 
+            font-size: 1.2em;
+            color: var(--text-color);
+            font-weight: 600; 
+            /* Para que los títulos de las tarjetas de CL no tengan icono, simplemente el texto */
+            display: flex; /* Asegura que el texto esté centrado si hay padding, etc. */
+            justify-content: center;
+            align-items: center;
+        }
+        .summary-card p {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
         footer {
             text-align: center; padding: 20px; color: #777; font-size: 0.9em; width: 100%; margin-top: auto; 
         }
@@ -124,54 +244,70 @@
             transition: opacity 0.3s ease;
         }
         footer a:hover .linkedin-logo { opacity: 1; }
+        
         @media (max-width: 768px) { 
+            .tabs-container { flex-wrap: wrap; justify-content: center; }
+            .tab-button { flex-basis: 45%; margin: 5px; } 
             .summary-cards-container { flex-direction: column; align-items: center; }
             .summary-card { flex-basis: 100%; max-width: 300px; }
+            .button-container { flex-direction: column; align-items: center; gap: 10px; }
+            .filters-container { grid-template-columns: 1fr; }
         }
         @media (max-width: 600px) {
-            .container, .chart-container-wrapper, .summary-cards-container-wrapper { padding: 20px; }
+            .tab-content { padding: 20px; }
             h1 { font-size: 1.5em; }
-            .filters-container { flex-direction: column; gap: 10px; }
-            .filters-container .form-group { width: 100%; }
+            .tab-button { flex-basis: 100%; } 
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📈 Carga de Datos Diarios del Hotel</h1>
+    <div class="tabs-container">
+        <button class="tab-button active" onclick="showTab('tab-form')">✍️ Cargar Datos</button>
+        <button class="tab-button" onclick="showTab('tab-analysis')">📈 Análisis y Métricas</button>
+    </div>
+
+    <div id="tab-form" class="tab-content active">
+        <h1>📊 Carga de Datos Diarios del Hotel</h1>
         <form id="hotelDataForm">
-            <!-- COPIA Y PEGA TU FORMULARIO COMPLETO AQUÍ -->
-             <div class="form-group"> <label for="registroTimestamp">Fecha y Hora del Registro:</label> <input type="text" id="registroTimestamp" name="registroTimestamp" readonly> </div>
-            <div class="form-group"> <label for="fechaReporte">Fecha del Reporte:</label> <input type="date" id="fechaReporte" name="fechaReporte" required> </div>
-            <div class="form-group"> <label for="ocupacionHotel"># Cantidad de Huéspedes:</label> <input type="number" id="ocupacionHotel" name="ocupacionHotel" min="0" step="1" placeholder="Ej: 180" required> </div>
-             <fieldset> <legend>🍳 Desayuno</legend> <div class="form-group"> <label for="cantidadDesayunos"># Cantidad de Desayunos:</label> <input type="number" id="cantidadDesayunos" name="cantidadDesayunos" min="0" placeholder="Ej: 120" required> </div> <div class="form-group"> <label for="mozosDesayuno">Mozos Desayuno:</label> <input type="number" id="mozosDesayuno" name="mozosDesayuno" min="0" placeholder="Ej: 3" required> </div> <div class="form-group"> <label for="bacherosDesayuno">Bacheros Desayuno:</label> <input type="number" id="bacherosDesayuno" name="bacherosDesayuno" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosDesayuno">Cocineros Desayuno:</label> <input type="number" id="cocinerosDesayuno" name="cocinerosDesayuno" min="0" placeholder="Ej: 2" required> </div> </fieldset>
+             <div class="form-group"> <label for="registroTimestamp">⏰ Fecha y Hora del Registro:</label> <input type="text" id="registroTimestamp" name="registroTimestamp" readonly> </div>
+            <div class="form-group"> <label for="fechaReporte">🗓️ Fecha del Reporte:</label> <input type="date" id="fechaReporte" name="fechaReporte" required> </div>
+            <div class="form-group"> <label for="ocupacionHotel">👥 Cantidad de Huéspedes:</label> <input type="number" id="ocupacionHotel" name="ocupacionHotel" min="0" step="1" placeholder="Ej: 180" required> </div>
+             <fieldset> <legend>☕ Desayuno</legend> <div class="form-group"> <label for="cantidadDesayunos"># Cantidad de Desayunos:</label> <input type="number" id="cantidadDesayunos" name="cantidadDesayunos" min="0" placeholder="Ej: 120" required> </div> <div class="form-group"> <label for="mozosDesayuno">Mozos Desayuno:</label> <input type="number" id="mozosDesayuno" name="mozosDesayuno" min="0" placeholder="Ej: 3" required> </div> <div class="form-group"> <label for="bacherosDesayuno">Bacheros Desayuno:</label> <input type="number" id="bacherosDesayuno" name="bacherosDesayuno" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosDesayuno">Cocineros Desayuno:</label> <input type="number" id="cocinerosDesayuno" name="cocinerosDesayuno" min="0" placeholder="Ej: 2" required> </div> </fieldset>
             <fieldset> <legend>🍽️ Almuerzo</legend> <div class="form-group"> <label for="cubiertosAlmuerzo"># Cubiertos Almuerzo:</label> <input type="number" id="cubiertosAlmuerzo" name="cubiertosAlmuerzo" min="0" placeholder="Ej: 80" required> </div> <div class="form-group"> <label for="mozosAlmuerzo">Mozos Almuerzo:</label> <input type="number" id="mozosAlmuerzo" name="mozosAlmuerzo" min="0" placeholder="Ej: 2" required> </div> <div class="form-group"> <label for="bacherosAlmuerzo">Bacheros Almuerzo:</label> <input type="number" id="bacherosAlmuerzo" name="bacherosAlmuerzo" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosAlmuerzo">Cocineros Almuerzo:</label> <input type="number" id="cocinerosAlmuerzo" name="cocinerosAlmuerzo" min="0" placeholder="Ej: 2" required> </div> </fieldset>
-            <fieldset> <legend>🌙 Cena</legend> <div class="form-group"> <label for="cubiertosCena"># Cubiertos Cena:</label> <input type="number" id="cubiertosCena" name="cubiertosCena" min="0" placeholder="Ej: 150" required> </div> <div class="form-group"> <label for="mozosCena">Mozos Cena:</label> <input type="number" id="mozosCena" name="mozosCena" min="0" placeholder="Ej: 4" required> </div> <div class="form-group"> <label for="bacherosCena">Bacheros Cena:</label> <input type="number" id="bacherosCena" name="bacherosCena" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosCena">Cocineros Cena:</label> <input type="number" id="cocinerosCena" name="cocinerosCena" min="0" placeholder="Ej: 3" required> </div> </fieldset>
-            <div class="button-container"> <button type="submit" id="submitButton">💾 Guardar Datos</button> </div>
+            <fieldset> <legend>🥂 Cena</legend> <div class="form-group"> <label for="cubiertosCena"># Cubiertos Cena:</label> <input type="number" id="cubiertosCena" name="cubiertosCena" min="0" placeholder="Ej: 150" required> </div> <div class="form-group"> <label for="mozosCena">Mozos Cena:</label> <input type="number" id="mozosCena" name="mozosCena" min="0" placeholder="Ej: 4" required> </div> <div class="form-group"> <label for="bacherosCena">Bacheros Cena:</label> <input type="number" id="bacherosCena" name="bacherosCena" min="0" placeholder="Ej: 1" required> </div> <div class="form-group"> <label for="cocinerosCena">Cocineros Cena:</label> <input type="number" id="cocinerosCena" name="cocinerosCena" min="0" placeholder="Ej: 3" required> </div> </fieldset>
+            <div class="button-container"> 
+                <button type="submit" id="submitButton">📥 Guardar Datos</button>
+                <a id="excelDataButton" href="#" target="_blank" rel="noopener noreferrer" class="excel-button">
+                    📄 Datos en Hoja
+                </a>
+            </div>
         </form>
         <div id="statusMessage" class="status-message" style="display: none;"></div>
     </div>
 
-    <div class="chart-container-wrapper">
-        <h2>📊 Cantidad de Huéspedes vs. Tiempo</h2>
-        <div class="filters-container">
-            <div class="form-group"> <label for="filterYear">Año:</label> <select id="filterYear"><option value="">Todos</option></select> </div>
-            <div class="form-group"> <label for="filterMonth">Mes:</label> <select id="filterMonth"><option value="">Todos</option></select> </div>
-            <div class="form-group"> <label for="filterDay">Día:</label> <select id="filterDay"><option value="">Todos</option></select> </div>
-            <button type="button" class="filter-button" id="applyFilterButton">Filtrar</button>
-            <button type="button" class="filter-button" id="resetFilterButton" style="background-color: #777;">Resetear</button>
+    <div id="tab-analysis" class="tab-content">
+        <div class="chart-container-wrapper">
+            <h2>📈 Cantidad de Huéspedes vs. Tiempo</h2>
+            <div class="filters-container">
+                <div class="form-group"> <label for="filterYear">Año:</label> <select id="filterYear"><option value="">Todos</option></select> </div>
+                <div class="form-group"> <label for="filterStartDate">Desde:</label> <input type="date" id="filterStartDate" name="filterStartDate"> </div>
+                <div class="form-group"> <label for="filterEndDate">Hasta:</label> <input type="date" id="filterEndDate" name="filterEndDate"> </div>
+                <button type="button" class="filter-button" id="applyFilterButton">🔍 Filtrar</button>
+                <button type="button" class="filter-button" id="resetFilterButton" style="background-color: #777;">🔄 Resetear</button>
+            </div>
+            <div id="loadingChart" style="display: none;">Cargando gráfico...</div>
+            <canvas id="ocupacionHotelChart"></canvas>
         </div>
-        <div id="loadingChart" style="display: none;">Cargando gráfico...</div>
-        <canvas id="ocupacionHotelChart"></canvas>
-    </div>
 
-    <div class="summary-cards-container-wrapper">
-        <h2>Resumen Costos Laborales (%)</h2>
-        <div id="loadingCards" style="display: none;">Calculando promedios...</div>
-        <div class="summary-cards-container" id="summaryCardsContent">
-            <div class="summary-card" id="cardCLDesayuno"> <h3>CL Desayuno</h3> <p><span id="avgCLDesayunoValue">-</span>%</p> </div>
-            <div class="summary-card" id="cardCLAlmuerzo"> <h3>CL Almuerzo</h3> <p><span id="avgCLAlmuerzoValue">-</span>%</p> </div>
-            <div class="summary-card" id="cardCLCena"> <h3>CL Cena</h3> <p><span id="avgCLCenaValue">-</span>%</p> </div>
+        <div class="summary-cards-container-wrapper">
+            <h2>Resumen Costos Laborales (%)</h2>
+            <div id="loadingCards" style="display: none;">Calculando promedios...</div>
+            <div class="summary-cards-container" id="summaryCardsContent">
+                <!-- Íconos eliminados de las tarjetas de resumen según solicitud -->
+                <div class="summary-card" id="cardCLDesayuno"> <h3>CL Desayuno</h3> <p><span id="avgCLDesayunoValue">-</span>%</p> </div>
+                <div class="summary-card" id="cardCLAlmuerzo"> <h3>CL Almuerzo</h3> <p><span id="avgCLAlmuerzoValue">-</span>%</p> </div>
+                <div class="summary-card" id="cardCLCena"> <h3>CL Cena</h3> <p><span id="avgCLCenaValue">-</span>%</p> </div>
+            </div>
         </div>
     </div>
 
@@ -183,7 +319,30 @@
     </footer>
 
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI2dak2JWQeDxWnhJZbwK04OR8g7aibHBAB_WL2XqZdxQ-olPinJbA8CCt_Qh_q3cxDA/exec'; // <-- ¡¡VERIFICA Y ACTUALIZA ESTA URL!!
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI2dak2JWQeDxWnhJZbwK04OR8g7aibHBAB_WL2XqZdxQ-olPinJbA8CCt_Qh_q3cxDA/exec'; 
+        const GOOGLE_SHEET_DATA_URL = 'https://docs.google.com/spreadsheets/d/1sWpt3NMZTdQRfQFVYL96u-tzDt2VbD9mwhNj-72oR6E/edit?gid=0#gid=0'; 
+
+        let hotelChart = null; 
+        let allChartData = []; 
+        let chartDataFetched = false; 
+
+        const form = document.getElementById('hotelDataForm');
+        const submitButton = document.getElementById('submitButton');
+        const statusMessage = document.getElementById('statusMessage');
+
+        const chartCanvas = document.getElementById('ocupacionHotelChart');
+        const loadingChartDiv = document.getElementById('loadingChart');
+        const loadingCardsDiv = document.getElementById('loadingCards');
+        const summaryCardsContentDiv = document.getElementById('summaryCardsContent');
+        
+        const filterYearSelect = document.getElementById('filterYear');
+        const filterStartDateInput = document.getElementById('filterStartDate');
+        const filterEndDateInput = document.getElementById('filterEndDate');
+        const applyFilterButton = document.getElementById('applyFilterButton');
+        const resetFilterButton = document.getElementById('resetFilterButton');
+        const excelDataButton = document.getElementById('excelDataButton');
+
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
         document.addEventListener('DOMContentLoaded', function() {
             const now = new Date();
@@ -197,75 +356,195 @@
             document.getElementById('registroTimestamp').value = formattedDateTime;
             const today = now.toISOString().split('T')[0];
             document.getElementById('fechaReporte').value = today;
-            fetchChartData(); 
+
+            showTab('tab-form'); 
             setupFilterListeners();
+            excelDataButton.href = GOOGLE_SHEET_DATA_URL;
         });
-        const form = document.getElementById('hotelDataForm');
-        const submitButton = document.getElementById('submitButton');
-        const statusMessage = document.getElementById('statusMessage');
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+
+            if (tabId === 'tab-analysis' && !chartDataFetched) {
+                fetchChartData();
+            } else if (tabId === 'tab-analysis' && chartDataFetched && allChartData.length > 0) {
+                 applyFiltersAndRender(); 
+            }
+        }
+
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            submitButton.disabled = true; submitButton.textContent = 'Guardando...';
-            statusMessage.style.display = 'none'; statusMessage.className = 'status-message'; 
-            const formData = new FormData(form); const data = {};
-            data['RegistroTimestamp'] = new Date().toISOString(); 
-            for (let [key, value] of formData.entries()) { data[key] = value; }
-            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', cache: 'no-cache', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            submitButton.disabled = true;
+            submitButton.textContent = 'Guardando...';
+            statusMessage.style.display = 'none';
+            statusMessage.className = 'status-message'; 
+            
+            const formData = new FormData(form);
+            const data = {};
+            data['RegistroTimestamp'] = document.getElementById('registroTimestamp').value; 
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            data['fechaReporte'] = new Date(data['fechaReporte']).toISOString().split('T')[0];
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
             .then(() => { 
-                statusMessage.textContent = '¡Datos guardados exitosamente!'; statusMessage.classList.add('success'); statusMessage.style.display = 'block';
+                statusMessage.textContent = '¡Datos guardados exitosamente!';
+                statusMessage.classList.add('success');
+                statusMessage.style.display = 'block';
                 form.reset(); 
+                
                 const now = new Date(); 
-                const day = String(now.getDate()).padStart(2, '0'); const month = String(now.getMonth() + 1).padStart(2, '0'); const year = now.getFullYear();
-                const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); const seconds = String(now.getSeconds()).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
                 const formattedDateTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
                 document.getElementById('registroTimestamp').value = formattedDateTime;
-                const today = now.toISOString().split('T')[0]; document.getElementById('fechaReporte').value = today;
-                fetchChartData(); 
+                const today = now.toISOString().split('T')[0];
+                document.getElementById('fechaReporte').value = today;
+
+                chartDataFetched = false; 
+                if (document.getElementById('tab-analysis').classList.contains('active')) {
+                    fetchChartData();
+                }
             })
-            .catch(error => { console.error('Error al guardar:', error); statusMessage.textContent = 'Error al guardar los datos. Detalles: ' + error.message; statusMessage.classList.add('error'); statusMessage.style.display = 'block'; })
-            .finally(() => { submitButton.disabled = false; submitButton.textContent = '💾 Guardar Datos'; });
+            .catch(error => { 
+                console.error('Error al guardar:', error);
+                statusMessage.textContent = 'Error al guardar los datos. Detalles: ' + error.message;
+                statusMessage.classList.add('error');
+                statusMessage.style.display = 'block';
+            })
+            .finally(() => { 
+                submitButton.disabled = false;
+                submitButton.textContent = '📥 Guardar Datos';
+            });
         });
-        const chartCanvas = document.getElementById('ocupacionHotelChart');
-        const loadingChartDiv = document.getElementById('loadingChart');
-        const loadingCardsDiv = document.getElementById('loadingCards');
-        const summaryCardsContentDiv = document.getElementById('summaryCardsContent');
-        let hotelChart = null; 
-        let allChartData = []; 
-        const filterYearSelect = document.getElementById('filterYear'); const filterMonthSelect = document.getElementById('filterMonth'); const filterDaySelect = document.getElementById('filterDay');
-        const applyFilterButton = document.getElementById('applyFilterButton'); const resetFilterButton = document.getElementById('resetFilterButton');
-        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        function populateFilterOptions(data) { const years = new Set(); data.forEach(item => { if (item.x) years.add(new Date(item.x).getFullYear()); }); filterYearSelect.innerHTML = '<option value="">Todos</option>'; Array.from(years).sort((a,b) => b - a).forEach(year => { const option = document.createElement('option'); option.value = year; option.textContent = year; filterYearSelect.appendChild(option); }); updateMonthOptions(); }
-        function updateMonthOptions() { const selectedYear = filterYearSelect.value; const monthsInYear = new Set(); filterMonthSelect.innerHTML = '<option value="">Todos</option>'; allChartData.forEach(item => { if (item.x) { const date = new Date(item.x); if (!selectedYear || date.getFullYear() == selectedYear) { monthsInYear.add(date.getMonth()); } } }); Array.from(monthsInYear).sort((a,b) => a - b).forEach(monthIndex => { const option = document.createElement('option'); option.value = monthIndex + 1; option.textContent = monthNames[monthIndex]; filterMonthSelect.appendChild(option); }); updateDayOptions(); }
-        function updateDayOptions() { const selectedYear = filterYearSelect.value; const selectedMonth = filterMonthSelect.value; const daysInSelection = new Set(); filterDaySelect.innerHTML = '<option value="">Todos</option>'; allChartData.forEach(item => { if (item.x) { const date = new Date(item.x); let yearMatch = !selectedYear || date.getFullYear() == selectedYear; let monthMatch = !selectedMonth || (date.getMonth() + 1) == selectedMonth; if (yearMatch && monthMatch) daysInSelection.add(date.getDate()); } }); Array.from(daysInSelection).sort((a,b) => a - b).forEach(day => { const option = document.createElement('option'); option.value = day; option.textContent = day; filterDaySelect.appendChild(option); }); }
-        function setupFilterListeners() { filterYearSelect.addEventListener('change', updateMonthOptions); filterMonthSelect.addEventListener('change', updateDayOptions); applyFilterButton.addEventListener('click', applyFiltersAndRender); resetFilterButton.addEventListener('click', resetFiltersAndRender); }
-        function applyFiltersAndRender() { const selectedYear = filterYearSelect.value; const selectedMonth = filterMonthSelect.value; const selectedDay = filterDaySelect.value; const filteredData = allChartData.filter(item => { if (!item.x) return false; const date = new Date(item.x); const yearMatch = !selectedYear || date.getFullYear() == selectedYear; const monthMatch = !selectedMonth || (date.getMonth() + 1) == selectedMonth; const dayMatch = !selectedDay || date.getDate() == selectedDay; return yearMatch && monthMatch && dayMatch; }); renderChart(filteredData); updateSummaryCards(filteredData); }
-        function resetFiltersAndRender() { filterYearSelect.value = ""; updateMonthOptions(); filterMonthSelect.value = ""; updateDayOptions(); filterDaySelect.value = ""; renderChart(allChartData); updateSummaryCards(allChartData); }
+
+        function populateFilterOptions(data) {
+            const years = new Set();
+            data.forEach(item => {
+                if (item.x) years.add(new Date(item.x).getFullYear());
+            });
+            filterYearSelect.innerHTML = '<option value="">Todos</option>';
+            Array.from(years).sort((a,b) => b - a).forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                filterYearSelect.appendChild(option);
+            });
+        }
+
+        function setupFilterListeners() {
+            filterYearSelect.addEventListener('change', applyFiltersAndRender);
+            filterStartDateInput.addEventListener('change', applyFiltersAndRender);
+            filterEndDateInput.addEventListener('change', applyFiltersAndRender);
+            applyFilterButton.addEventListener('click', applyFiltersAndRender);
+            resetFilterButton.addEventListener('click', resetFiltersAndRender);
+        }
+
+        function applyFiltersAndRender() {
+            const selectedYear = filterYearSelect.value;
+            const startDateString = filterStartDateInput.value;
+            const endDateString = filterEndDateInput.value;
+
+            const filteredData = allChartData.filter(item => {
+                if (!item.x) return false;
+                const itemDate = new Date(item.x);
+                
+                let yearMatch = !selectedYear || itemDate.getFullYear() == selectedYear;
+
+                let dateRangeMatch = true;
+                if (startDateString) {
+                    const startDate = new Date(startDateString);
+                    startDate.setHours(0, 0, 0, 0); // Normalizar a inicio del día
+                    dateRangeMatch = dateRangeMatch && (itemDate >= startDate);
+                }
+                if (endDateString) {
+                    const endDate = new Date(endDateString);
+                    endDate.setHours(23, 59, 59, 999); // Normalizar a fin del día
+                    dateRangeMatch = dateRangeMatch && (itemDate <= endDate);
+                }
+                
+                return yearMatch && dateRangeMatch;
+            });
+            renderChart(filteredData);
+            updateSummaryCards(filteredData);
+        }
+
+        function resetFiltersAndRender() {
+            filterYearSelect.value = "";
+            filterStartDateInput.value = ""; 
+            filterEndDateInput.value = "";   
+            renderChart(allChartData);
+            updateSummaryCards(allChartData);
+        }
+
         async function fetchChartData() { 
             loadingChartDiv.style.display = 'block'; loadingChartDiv.textContent = 'Cargando gráfico...'; 
             loadingCardsDiv.style.display = 'block'; loadingCardsDiv.textContent = 'Cargando resúmenes...';
             summaryCardsContentDiv.style.display = 'none';
             chartCanvas.style.display = 'none'; 
             if (hotelChart) hotelChart.destroy();
+
             try {
                 const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getChartData`);
                 if (!response.ok) { throw new Error(`Error de red o servidor: ${response.status} ${response.statusText}`); }
                 const rawData = await response.json(); 
                 if (rawData && rawData.status === "error") { throw new Error(`Error desde Apps Script: ${rawData.message}`); }
-                allChartData = rawData.map(item => ({ x: item.fechaReporte, y: parseFloat(item.ocupacionHotel), clP: item.clP, clQ: item.clQ, clR: item.clR, clS: item.clS, clT: item.clT, clU: item.clU, clV: item.clV, clW: item.clW, clX: item.clX })).filter(item => item.x && !isNaN(item.y)).sort((a, b) => new Date(a.x) - new Date(b.x)); 
-                populateFilterOptions(allChartData); renderChart(allChartData); updateSummaryCards(allChartData);
+                
+                allChartData = rawData.map(item => ({ 
+                    x: item.fechaReporte, 
+                    y: parseFloat(item.ocupacionHotel), 
+                    clP: typeof item.clP === 'number' ? item.clP : parseFloat(item.clP),
+                    clQ: typeof item.clQ === 'number' ? item.clQ : parseFloat(item.clQ),
+                    clR: typeof item.clR === 'number' ? item.clR : parseFloat(item.clR),
+                    clS: typeof item.clS === 'number' ? item.clS : parseFloat(item.clS),
+                    clT: typeof item.clT === 'number' ? item.clT : parseFloat(item.clT),
+                    clU: typeof item.clU === 'number' ? item.clU : parseFloat(item.clU),
+                    clV: typeof item.clV === 'number' ? item.clV : parseFloat(item.clV),
+                    clW: typeof item.clW === 'number' ? item.clW : parseFloat(item.clW),
+                    clX: typeof item.clX === 'number' ? item.clX : parseFloat(item.clX)
+                })).filter(item => item.x && !isNaN(item.y)).sort((a, b) => new Date(a.x) - new Date(b.x)); 
+                
+                chartDataFetched = true; 
+                populateFilterOptions(allChartData); 
+                applyFiltersAndRender(); 
+
             } catch (error) { 
                 console.error("Error cargando datos para UI:", error);
                 const errorMessage = `Error al cargar datos: ${error.message}. Asegúrate que la URL del script y los nombres de columna sean correctos.`;
                 loadingChartDiv.textContent = errorMessage; loadingCardsDiv.textContent = ""; 
                 loadingChartDiv.style.display = 'block'; loadingCardsDiv.style.display = 'none';
+                chartDataFetched = false; 
             } finally {
                 if (loadingChartDiv.textContent.startsWith("Cargando")) { loadingChartDiv.style.display = 'none'; }
                 if (loadingCardsDiv.textContent.startsWith("Cargando")) { loadingCardsDiv.style.display = 'none'; }
-                if (allChartData.length > 0) { if (loadingChartDiv.style.display === 'none') chartCanvas.style.display = 'block'; if (loadingCardsDiv.style.display === 'none') summaryCardsContentDiv.style.display = 'flex'; }
+                if (allChartData.length > 0) { 
+                    if (loadingChartDiv.style.display === 'none') chartCanvas.style.display = 'block'; 
+                    if (loadingCardsDiv.style.display === 'none') summaryCardsContentDiv.style.display = 'flex'; 
+                }
             }
         }
 
-        // --- FUNCIÓN updateSummaryCards MODIFICADA ---
         function updateSummaryCards(dataForPeriod) {
             loadingCardsDiv.style.display = 'none';
             summaryCardsContentDiv.style.display = 'flex';
@@ -278,23 +557,19 @@
             let totalCountCLCena = 0;
 
             dataForPeriod.forEach(item => {
-                // Acumular valores para Desayuno (P, Q, R)
-                if (typeof item.clP === 'number' && !isNaN(item.clP)) { totalSumCLDesayuno += item.clP; totalCountCLDesayuno++; }
-                if (typeof item.clQ === 'number' && !isNaN(item.clQ)) { totalSumCLDesayuno += item.clQ; totalCountCLDesayuno++; }
-                if (typeof item.clR === 'number' && !isNaN(item.clR)) { totalSumCLDesayuno += item.clR; totalCountCLDesayuno++; }
+                if (typeof item.clP === 'number' && isFinite(item.clP)) { totalSumCLDesayuno += item.clP; totalCountCLDesayuno++; }
+                if (typeof item.clQ === 'number' && isFinite(item.clQ)) { totalSumCLDesayuno += item.clQ; totalCountCLDesayuno++; }
+                if (typeof item.clR === 'number' && isFinite(item.clR)) { totalSumCLDesayuno += item.clR; totalCountCLDesayuno++; }
 
-                // Acumular valores para Almuerzo (S, T, U)
-                if (typeof item.clS === 'number' && !isNaN(item.clS)) { totalSumCLAlmuerzo += item.clS; totalCountCLAlmuerzo++; }
-                if (typeof item.clT === 'number' && !isNaN(item.clT)) { totalSumCLAlmuerzo += item.clT; totalCountCLAlmuerzo++; }
-                if (typeof item.clU === 'number' && !isNaN(item.clU)) { totalSumCLAlmuerzo += item.clU; totalCountCLAlmuerzo++; }
+                if (typeof item.clS === 'number' && isFinite(item.clS)) { totalSumCLAlmuerzo += item.clS; totalCountCLAlmuerzo++; }
+                if (typeof item.clT === 'number' && isFinite(item.clT)) { totalSumCLAlmuerzo += item.clT; totalCountCLAlmuerzo++; }
+                if (typeof item.clU === 'number' && isFinite(item.clU)) { totalSumCLAlmuerzo += item.clU; totalCountCLAlmuerzo++; }
 
-                // Acumular valores para Cena (V, W, X)
-                if (typeof item.clV === 'number' && !isNaN(item.clV)) { totalSumCLCena += item.clV; totalCountCLCena++; }
-                if (typeof item.clW === 'number' && !isNaN(item.clW)) { totalSumCLCena += item.clW; totalCountCLCena++; }
-                if (typeof item.clX === 'number' && !isNaN(item.clX)) { totalSumCLCena += item.clX; totalCountCLCena++; }
+                if (typeof item.clV === 'number' && isFinite(item.clV)) { totalSumCLCena += item.clV; totalCountCLCena++; }
+                if (typeof item.clW === 'number' && isFinite(item.clW)) { totalSumCLCena += item.clW; totalCountCLCena++; }
+                if (typeof item.clX === 'number' && isFinite(item.clX)) { totalSumCLCena += item.clX; totalCountCLCena++; }
             });
 
-            // Calcular promedio y multiplicar por 100 si los datos originales son decimales (ej: 0.1 para 10%)
             const finalAvgDesayuno = (totalCountCLDesayuno > 0)
                 ? ((totalSumCLDesayuno / totalCountCLDesayuno) * 100).toFixed(1) 
                 : "N/A";
@@ -319,24 +594,91 @@
                 document.getElementById('avgCLCenaValue').textContent = "N/A";
             }
         }
-        // --- FIN FUNCIÓN updateSummaryCards MODIFICADA ---
 
         function renderChart(dataToRender) {
             if (hotelChart) hotelChart.destroy();
-             if (!chartCanvas) { loadingChartDiv.textContent = "Error: Elemento canvas del gráfico no encontrado."; loadingChartDiv.style.display = 'block'; return; }
+            if (!chartCanvas) { loadingChartDiv.textContent = "Error: Elemento canvas del gráfico no encontrado."; loadingChartDiv.style.display = 'block'; return; }
+            
             if (dataToRender.length === 0) {
                 if (!loadingChartDiv.textContent.startsWith("Error")) { loadingChartDiv.textContent = "No hay datos de ocupación para mostrar con los filtros seleccionados."; }
                 loadingChartDiv.style.display = 'block'; chartCanvas.style.display = 'none'; return;
-            } else { loadingChartDiv.style.display = 'none'; chartCanvas.style.display = 'block'; }
+            } else { 
+                loadingChartDiv.style.display = 'none'; 
+                chartCanvas.style.display = 'block'; 
+            }
             const ctx = chartCanvas.getContext('2d');
-            hotelChart = new Chart(ctx, { type: 'line', data: { 
-                 datasets: [{ label: 'Cantidad de Huéspedes', data: dataToRender, borderColor: 'var(--primary-color)', backgroundColor: 'rgba(74, 144, 226, 0.1)', tension: 0.2, fill: true, pointBackgroundColor: 'var(--primary-color)', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'var(--primary-color)', pointRadius: 4, pointHoverRadius: 6 }]
-            }, options: { 
-                responsive: true, maintainAspectRatio: true, 
-                scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'dd MMM yyyy', displayFormats: { day: 'dd MMM', month: 'MMM yyyy', year: 'yyyy' } }, title: { display: true, text: 'Fecha del Reporte', color: 'var(--text-color)' }, ticks: { color: 'var(--text-color)'}, grid: { display: false } }, y: { beginAtZero: true, title: { display: true, text: 'Cantidad de Huéspedes', color: 'var(--text-color)' }, ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)', drawBorder: false } } },
-                plugins: { legend: { display: true, position: 'top', labels: { color: 'var(--text-color)', font: { family: 'var(--font-family)'}} }, tooltip: { backgroundColor: 'var(--text-color)', titleColor: 'var(--card-bg-color)', bodyColor: 'var(--card-bg-color)', titleFont: { family: 'var(--font-family)', weight: 'bold' }, bodyFont: { family: 'var(--font-family)' }, padding: 10, cornerRadius: 'var(--border-radius)'/2, callbacks: { label: function(context) { return `${context.dataset.label}: ${context.parsed.y}`; } } } },
-                interaction: { mode: 'index', intersect: false }, hover: { mode: 'nearest', intersect: true }
-            } });
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(74, 144, 226, 0.4)'); 
+            gradient.addColorStop(1, 'rgba(74, 144, 226, 0.05)'); 
+
+
+            hotelChart = new Chart(ctx, { 
+                type: 'line', 
+                data: { 
+                 datasets: [{ 
+                    label: 'Cantidad de Huéspedes', 
+                    data: dataToRender, 
+                    borderColor: 'var(--primary-color)', 
+                    backgroundColor: gradient, 
+                    tension: 0.4, 
+                    fill: true, 
+                    pointBackgroundColor: 'var(--primary-color)', 
+                    pointBorderColor: '#fff', 
+                    pointHoverBackgroundColor: '#fff', 
+                    pointHoverBorderColor: 'var(--primary-color)', 
+                    pointRadius: 5, 
+                    pointHoverRadius: 8, 
+                    pointBorderWidth: 2 
+                 }]
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: true, 
+                    scales: { 
+                        x: { 
+                            type: 'time', 
+                            time: { 
+                                unit: 'day', 
+                                tooltipFormat: 'dd MMM yyyy', 
+                                displayFormats: { day: 'dd MMM', month: 'MMM yyyy', year: 'yyyy' } 
+                            }, 
+                            title: { display: true, text: 'Fecha del Reporte', color: 'var(--text-color)' }, 
+                            ticks: { color: 'var(--text-color)'}, 
+                            grid: { 
+                                display: false 
+                            } 
+                        }, 
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Cantidad de Huéspedes', color: 'var(--text-color)' }, 
+                            ticks: { color: 'var(--text-color)' }, 
+                            grid: { 
+                                color: 'rgba(224, 224, 224, 0.5)', 
+                                drawBorder: false,
+                                borderDash: [5, 5] 
+                            } 
+                        } 
+                    },
+                    plugins: { 
+                        legend: { display: true, position: 'top', labels: { color: 'var(--text-color)', font: { family: 'var(--font-family)', size: 14 }} }, 
+                        tooltip: { 
+                            backgroundColor: 'var(--text-color)', 
+                            titleColor: 'var(--card-bg-color)', 
+                            bodyColor: 'var(--card-bg-color)', 
+                            titleFont: { family: 'var(--font-family)', weight: 'bold', size: 14 }, 
+                            bodyFont: { family: 'var(--font-family)', size: 13 }, 
+                            padding: 12, 
+                            cornerRadius: 'var(--border-radius)', 
+                            callbacks: { 
+                                label: function(context) { return `${context.dataset.label}: ${context.parsed.y}`; } 
+                            } 
+                        } 
+                    },
+                    interaction: { mode: 'index', intersect: false }, 
+                    hover: { mode: 'nearest', intersect: true }
+                } 
+            });
         }
     </script>
 </body>
