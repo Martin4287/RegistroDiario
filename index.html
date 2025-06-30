@@ -225,7 +225,7 @@
             color: var(--text-color);
             font-weight: 600; 
             /* Para que los títulos de las tarjetas de CL no tengan icono, simplemente el texto */
-            display: flex; /* Asegura que el texto esté centrado si hay padding, etc. */
+            display: flex; 
             justify-content: center;
             align-items: center;
         }
@@ -303,7 +303,6 @@
             <h2>Resumen Costos Laborales (%)</h2>
             <div id="loadingCards" style="display: none;">Calculando promedios...</div>
             <div class="summary-cards-container" id="summaryCardsContent">
-                <!-- Íconos eliminados de las tarjetas de resumen según solicitud -->
                 <div class="summary-card" id="cardCLDesayuno"> <h3>CL Desayuno</h3> <p><span id="avgCLDesayunoValue">-</span>%</p> </div>
                 <div class="summary-card" id="cardCLAlmuerzo"> <h3>CL Almuerzo</h3> <p><span id="avgCLAlmuerzoValue">-</span>%</p> </div>
                 <div class="summary-card" id="cardCLCena"> <h3>CL Cena</h3> <p><span id="avgCLCenaValue">-</span>%</p> </div>
@@ -514,17 +513,15 @@
                 allChartData = rawData.map(item => ({ 
                     x: item.fechaReporte, 
                     y: parseFloat(item.ocupacionHotel), 
-                    clP: typeof item.clP === 'number' ? item.clP : parseFloat(item.clP),
-                    clQ: typeof item.clQ === 'number' ? item.clQ : parseFloat(item.clQ),
-                    clR: typeof item.clR === 'number' ? item.clR : parseFloat(item.clR),
-                    clS: typeof item.clS === 'number' ? item.clS : parseFloat(item.clS),
-                    clT: typeof item.clT === 'number' ? item.clT : parseFloat(item.clT),
-                    clU: typeof item.clU === 'number' ? item.clU : parseFloat(item.clU),
-                    clV: typeof item.clV === 'number' ? item.clV : parseFloat(item.clV),
-                    clW: typeof item.clW === 'number' ? item.clW : parseFloat(item.clW),
-                    clX: typeof item.clX === 'number' ? item.clX : parseFloat(item.clX)
-                })).filter(item => item.x && !isNaN(item.y)).sort((a, b) => new Date(a.x) - new Date(b.x)); 
+                    // ACTUALIZADO: Mapeo a las nuevas propiedades de Total CL
+                    clDesayunoTotal: typeof item['Total CL Des'] === 'number' ? item['Total CL Des'] : parseFloat(item['Total CL Des']),
+                    clAlmuerzoTotal: typeof item['Total CL Alm'] === 'number' ? item['Total CL Alm'] : parseFloat(item['Total CL Alm']),
+                    clCenaTotal: typeof item['Total CL Cena'] === 'number' ? item['Total CL Cena'] : parseFloat(item['Total CL Cena'])
+                })).filter(item => item.x && !isNaN(item.y));
                 
+                // Ordenar los datos por fecha
+                allChartData.sort((a, b) => new Date(a.x) - new Date(b.x)); 
+
                 chartDataFetched = true; 
                 populateFilterOptions(allChartData); 
                 applyFiltersAndRender(); 
@@ -550,34 +547,41 @@
             summaryCardsContentDiv.style.display = 'flex';
 
             let totalSumCLDesayuno = 0;
-            let totalCountCLDesayuno = 0;
+            let countCLDesayuno = 0; 
             let totalSumCLAlmuerzo = 0;
-            let totalCountCLAlmuerzo = 0;
+            let countCLAlmuerzo = 0;
             let totalSumCLCena = 0;
-            let totalCountCLCena = 0;
+            let countCLCena = 0;
 
             dataForPeriod.forEach(item => {
-                if (typeof item.clP === 'number' && isFinite(item.clP)) { totalSumCLDesayuno += item.clP; totalCountCLDesayuno++; }
-                if (typeof item.clQ === 'number' && isFinite(item.clQ)) { totalSumCLDesayuno += item.clQ; totalCountCLDesayuno++; }
-                if (typeof item.clR === 'number' && isFinite(item.clR)) { totalSumCLDesayuno += item.clR; totalCountCLDesayuno++; }
+                // ACTUALIZADO: Acumular valores para Desayuno (usando la nueva propiedad clDesayunoTotal)
+                if (typeof item.clDesayunoTotal === 'number' && isFinite(item.clDesayunoTotal)) { 
+                    totalSumCLDesayuno += item.clDesayunoTotal; 
+                    countCLDesayuno++; 
+                }
 
-                if (typeof item.clS === 'number' && isFinite(item.clS)) { totalSumCLAlmuerzo += item.clS; totalCountCLAlmuerzo++; }
-                if (typeof item.clT === 'number' && isFinite(item.clT)) { totalSumCLAlmuerzo += item.clT; totalCountCLAlmuerzo++; }
-                if (typeof item.clU === 'number' && isFinite(item.clU)) { totalSumCLAlmuerzo += item.clU; totalCountCLAlmuerzo++; }
+                // ACTUALIZADO: Acumular valores para Almuerzo (usando la nueva propiedad clAlmuerzoTotal)
+                if (typeof item.clAlmuerzoTotal === 'number' && isFinite(item.clAlmuerzoTotal)) { 
+                    totalSumCLAlmuerzo += item.clAlmuerzoTotal; 
+                    countCLAlmuerzo++; 
+                }
 
-                if (typeof item.clV === 'number' && isFinite(item.clV)) { totalSumCLCena += item.clV; totalCountCLCena++; }
-                if (typeof item.clW === 'number' && isFinite(item.clW)) { totalSumCLCena += item.clW; totalCountCLCena++; }
-                if (typeof item.clX === 'number' && isFinite(item.clX)) { totalSumCLCena += item.clX; totalCountCLCena++; }
+                // ACTUALIZADO: Acumular valores para Cena (usando la nueva propiedad clCenaTotal)
+                if (typeof item.clCenaTotal === 'number' && isFinite(item.clCenaTotal)) { 
+                    totalSumCLCena += item.clCenaTotal; 
+                    countCLCena++; 
+                }
             });
 
-            const finalAvgDesayuno = (totalCountCLDesayuno > 0)
-                ? ((totalSumCLDesayuno / totalCountCLDesayuno) * 100).toFixed(1) 
+            // Calcular promedio para cada servicio (se asume que los valores ya son porcentajes, e.g., 10.2, no 0.102)
+            const finalAvgDesayuno = (countCLDesayuno > 0)
+                ? (totalSumCLDesayuno / countCLDesayuno).toFixed(1) 
                 : "N/A";
-            const finalAvgAlmuerzo = (totalCountCLAlmuerzo > 0)
-                ? ((totalSumCLAlmuerzo / totalCountCLAlmuerzo) * 100).toFixed(1)
+            const finalAvgAlmuerzo = (countCLAlmuerzo > 0)
+                ? (totalSumCLAlmuerzo / countCLAlmuerzo).toFixed(1)
                 : "N/A";
-            const finalAvgCena = (totalCountCLCena > 0)
-                ? ((totalSumCLCena / totalCountCLCena) * 100).toFixed(1)
+            const finalAvgCena = (countCLCena > 0)
+                ? (totalSumCLCena / countCLCena).toFixed(1)
                 : "N/A";
 
             document.getElementById('avgCLDesayunoValue').textContent = finalAvgDesayuno;
@@ -588,7 +592,7 @@
                  loadingCardsDiv.textContent = "No hay datos para el período seleccionado.";
                  loadingCardsDiv.style.display = 'block';
                  summaryCardsContentDiv.style.display = 'none';
-            } else if (totalCountCLDesayuno === 0 && totalCountCLAlmuerzo === 0 && totalCountCLCena === 0) {
+            } else if (countCLDesayuno === 0 && countCLAlmuerzo === 0 && countCLCena === 0) {
                 document.getElementById('avgCLDesayunoValue').textContent = "N/A";
                 document.getElementById('avgCLAlmuerzoValue').textContent = "N/A";
                 document.getElementById('avgCLCenaValue').textContent = "N/A";
